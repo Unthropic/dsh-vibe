@@ -12,9 +12,15 @@ const releaseHelpers = existsSync(releaseScript)
   : undefined;
 const skipWithoutPrivateScript = releaseHelpers === undefined;
 
-test('release allowlist includes the bundle patch', { skip: skipWithoutPrivateScript }, () => {
-  assert.ok(releaseHelpers.SHIP.includes('cordis.patch.yml'));
-});
+test(
+  'release allowlist includes the bundle patch and translated README',
+  { skip: skipWithoutPrivateScript },
+  () => {
+    assert.ok(releaseHelpers.SHIP.includes('cordis.patch.yml'));
+    assert.ok(releaseHelpers.SHIP.includes('README.md'));
+    assert.ok(releaseHelpers.SHIP.includes('README.zh-CN.md'));
+  },
+);
 
 test(
   'release arguments support dry-run and reject unknown flags',

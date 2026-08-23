@@ -1,5 +1,7 @@
 # dsh-vibe
 
+English | [简体中文](README.zh-CN.md)
+
 > Ambient sci-fi vibes for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web surface.
 
 dsh-vibe is a dual-face Cordis plugin that adds two layers of atmosphere to the
@@ -12,8 +14,9 @@ dsh web UI:
    energy rings, and a synthwave perspective grid flowing along the bottom of
    the screen. The HUD unmounts when the response finishes or stops.
 
-Everything is pure CSS animation, fully click-through, and adapts to your
-light/dark theme.
+The visual effects use CSS animation and remain fully click-through. A Vibe
+button in the bottom-left sidebar footer gives you quick access to the plugin's
+appearance settings.
 
 ### Ambient background
 
@@ -33,16 +36,18 @@ The HUD activated by a real running model response:
 | ---------------------------- | ------------------------------------------------------------------------------ |
 | Background (always)          | 3 aurora glows · drifting 2-layer starfield                                    |
 | Thinking HUD (while running) | glowing corner brackets · scan beam · 2 spinning energy rings · synthwave grid |
+| Vibe settings                | presets · custom base color · optional quick button · reset                    |
 
 - **Zero interaction cost** — `pointer-events: none` on every layer, hardened
   against the shell's overlay CSS. It can never block a click.
-- **Theme-aware** — glows use the harness theme tokens
-  (`--dsw-alias-brand-primary`, state colors, label colors), so it looks right
-  in light and dark mode.
-- **Instant show/hide** — the HUD is driven by the same `useSessions` running
-  flag the sidebar uses; no polling, no extra services.
-- **No build step, no config schema, no persistence** — it is one hand-written
-  client bundle plus an inert host half.
+- **Theme-aware** — Adaptive uses Harness theme tokens, while every preset and
+  control remains readable in light and dark mode.
+- **Easy to configure** — open the Vibe button in the bottom-left sidebar
+  footer to switch presets or choose a base color.
+- **Instant HUD** — the thinking effects follow the same `useSessions` running
+  flag used by the sidebar, with no polling.
+- **Saved automatically** — configuration is persisted by the Harness host and
+  restored when you return.
 - **Reduced-motion aware** — continuous movement stops when the operating
   system requests reduced motion.
 
@@ -59,10 +64,10 @@ If `pnpm --version` is not available, install it first with
 
 ### Compatibility
 
-| Harness version | Validation                                                                                            |
-| --------------- | ----------------------------------------------------------------------------------------------------- |
-| `0.1.0-rc.8`    | Visual runtime test                                                                                   |
-| `0.1.1-rc.2`    | Packed bundle add/dump/remove cycle; client module loader, `shell.overlay`, and running state checked |
+| Harness version | Validation                                                                                                     |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `0.1.0-rc.8`    | Live isolated UI: quick panel, Plugin configuration, persistence, themes, light/dark, rail, and mobile layouts |
+| `0.1.1-rc.2`    | Packed bundle add/dump/remove cycle; client module loader, `shell.overlay`, and running state checked          |
 
 Harness is still evolving. If a newer release changes the client contract,
 please open an issue with the Harness version and browser console output.
@@ -103,21 +108,23 @@ dsh plugin --profile web add github:unthropic/dsh-vibe
 Restart `dsh web` after installation. This still requires `pnpm`; it only
 changes where the package is downloaded from.
 
-## Tuning
+## Configuration
 
-Everything visual lives in [`lib/client.js`](lib/client.js):
+Select the **Vibe** button in the bottom-left sidebar footer for quick theme
+changes. The same theme controls—and the quick-button switch—are available
+under **Settings → Plugins → Plugin configuration → dsh-vibe**.
 
-- `var CYAN = "77, 201, 255"` — the HUD accent color (R, G, B).
-- Opacities — `opacity: 0.42` on `.dsh-vibe-aurora`, `0.5` on
-  `.dsh-vibe-stars`, `0.3` on `.dsh-vibe-ring`, `0.9` on `.dsh-vibe-corner`.
-- Animation speeds — `dsh-vibe-scan 4.5s`, ring spins `7s`/`11s`, grid
-  `1.6s`, star drift `70s`, aurora drift `26s–40s`.
-- Remove a piece entirely by deleting its CSS block and its
-  `react.createElement(...)` line in `BackgroundLayer` / `ThinkingHud`.
+- **Adaptive** — follows the current Harness colors.
+- **Ocean** — uses a cool blue and cyan palette.
+- **Ember** — uses a warm orange and magenta palette.
+- **Custom** — lets you choose your own base color.
+- **Show floating Vibe button** — hides or restores the quick-access button;
+  this switch remains available in Plugin configuration.
+- **Reset** — returns to the default Adaptive preset.
 
-After editing, the running server serves the changed bundle on the next page
-hard-refresh (no restart needed for bundle content changes; adding or removing
-the row itself requires a restart).
+Changes appear immediately and are saved through the Harness host. The effects
+continue to follow Harness light and dark mode, and continuous movement still
+stops when your operating system requests reduced motion.
 
 ## Development
 

@@ -23,6 +23,7 @@
     "assets",
     "cordis.patch.yml",
     "README.md",
+    "README.zh-CN.md",
     "LICENSE"
   ],
   "keywords": [
@@ -61,5 +62,8 @@
     "eslint": "10.9.0",
     "prettier": "3.9.6",
     "sharp": "0.35.3"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1"
   }
 }
