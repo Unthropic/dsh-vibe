@@ -132,7 +132,8 @@ setting. Color settings are independent controls:
   **Follow Harness colors** off.
 - **Show floating Vibe button** — hides or restores the quick-access button;
   this switch remains available in Plugin configuration.
-- **Reset** — restores the Aurora theme with **Follow Harness colors** enabled.
+- **Reset** — restores all defaults: Aurora, **Follow Harness colors**, and the
+  floating Vibe button.
 
 Changes appear immediately and are saved through the Harness host. Your theme,
 color choices, and quick-button preference are restored when you return.

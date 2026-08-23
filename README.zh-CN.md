@@ -102,7 +102,7 @@ dsh plugin --profile web add github:unthropic/dsh-vibe
 - **Follow Harness colors** — 使用 Harness 主题颜色，让效果适配当前浅色或深色外观。
 - **Base color** — 选择效果的强调色。编辑该颜色会自动关闭 **Follow Harness colors**。
 - **显示浮动 Vibe 按钮（Show floating Vibe button）** — 隐藏或恢复快捷按钮；该开关始终可以在 Plugin configuration 中找到。
-- **Reset** — 恢复 Aurora 主题，并启用 **Follow Harness colors**。
+- **Reset** — 恢复全部默认设置：Aurora、**Follow Harness colors**，以及浮动 Vibe 按钮。
 
 更改会立即生效，并通过 Harness Host 保存。再次打开时，主题、颜色选择和快捷按钮偏好都会自动恢复。当操作系统启用“减少动态效果”时，连续动画仍会停止。
 
