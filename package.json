@@ -1,0 +1,65 @@
+{
+  "name": "dsh-vibe",
+  "version": "1.1.0",
+  "description": "Ambient sci-fi vibe for the DeepSeek Harness web surface: an aurora + starfield background, plus a sci-fi HUD (corner brackets, scan beam, energy rings, synthwave grid) while the model is thinking.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "check": "npm run lint && npm run format:check && npm test",
+    "demos:render": "node scripts/render-demos.mjs"
+  },
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "background",
+    "effects",
+    "sci-fi"
+  ],
+  "author": "Unthropic",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unthropic/dsh-vibe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unthropic/dsh-vibe/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "agent-browser": "0.32.3",
+    "eslint": "10.9.0",
+    "prettier": "3.9.6",
+    "sharp": "0.35.3"
+  }
+}
