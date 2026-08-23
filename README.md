@@ -4,15 +4,12 @@ English | [简体中文](README.zh-CN.md)
 
 > Ambient sci-fi vibes for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web surface.
 
-dsh-vibe is a dual-face Cordis plugin that adds two layers of atmosphere to the
-dsh web UI:
+dsh-vibe is a dual-face Cordis plugin that adds a configurable visual theme to
+the dsh web UI:
 
-1. **A permanent background** — three slow-drifting aurora glows (theme-aware)
-   and a deep, slowly scrolling starfield.
-2. **A thinking HUD** — the moment the model starts thinking, a sci-fi overlay
-   fades in: four pulsing corner brackets, a scanning energy beam, two spinning
-   energy rings, and a synthwave perspective grid flowing along the bottom of
-   the screen. The HUD unmounts when the response finishes or stops.
+1. **A permanent background** — each theme has its own animated atmosphere.
+2. **A thinking HUD** — each theme adds a matching overlay while the model is
+   thinking. The HUD unmounts when the response finishes or stops.
 
 The visual effects use CSS animation and remain fully click-through. A Vibe
 button in the bottom-left sidebar footer gives you quick access to the plugin's
@@ -20,30 +17,32 @@ appearance settings.
 
 ### Ambient background
 
-Idle Harness UI with the always-on aurora and starfield:
+Idle Harness UI with the default Aurora theme:
 
 ![dsh-vibe ambient background in an idle Harness session](assets/background.gif)
 
 ### Thinking HUD
 
-The HUD activated by a real running model response:
+The default Aurora HUD activated by a real running model response:
 
 ![dsh-vibe thinking HUD during a running Harness response](assets/thinking.gif)
 
 ## Features
 
-| Layer                        | What you get                                                                   |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| Background (always)          | 3 aurora glows · drifting 2-layer starfield                                    |
-| Thinking HUD (while running) | glowing corner brackets · scan beam · 2 spinning energy rings · synthwave grid |
-| Vibe settings                | presets · custom base color · optional quick button · reset                    |
+| Layer                        | What you get                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| Background (always)          | a distinct animated atmosphere for Aurora, Ocean, Ember, or Synthwave              |
+| Thinking HUD (while running) | a theme-specific motion and HUD system                                             |
+| Vibe settings                | theme dropdown · Harness color matching · custom base color · quick button · reset |
 
 - **Zero interaction cost** — `pointer-events: none` on every layer, hardened
   against the shell's overlay CSS. It can never block a click.
-- **Theme-aware** — Adaptive uses Harness theme tokens, while every preset and
-  control remains readable in light and dark mode.
+- **Four real themes** — Aurora, Ocean, Ember, and Synthwave change the motion,
+  background, and thinking HUD—not only the color palette.
+- **Independent color controls** — follow Harness colors or choose your own
+  base color without changing the selected visual theme.
 - **Easy to configure** — open the Vibe button in the bottom-left sidebar
-  footer to switch presets or choose a base color.
+  footer to switch themes or adjust the color controls.
 - **Instant HUD** — the thinking effects follow the same `useSessions` running
   flag used by the sidebar, with no polling.
 - **Saved automatically** — configuration is persisted by the Harness host and
@@ -110,21 +109,35 @@ changes where the package is downloaded from.
 
 ## Configuration
 
-Select the **Vibe** button in the bottom-left sidebar footer for quick theme
-changes. The same theme controls—and the quick-button switch—are available
-under **Settings → Plugins → Plugin configuration → dsh-vibe**.
+Select the **Vibe** button in the bottom-left sidebar footer for quick changes.
+The same controls—and the quick-button switch—are available under **Settings →
+Plugins → Plugin configuration → dsh-vibe**.
 
-- **Adaptive** — follows the current Harness colors.
-- **Ocean** — uses a cool blue and cyan palette.
-- **Ember** — uses a warm orange and magenta palette.
-- **Custom** — lets you choose your own base color.
+The **Theme** dropdown selects a complete visual system:
+
+- **Aurora** — drifting aurora veils, a star field, and a sci-fi ring/grid HUD.
+- **Ocean** — moving caustic light, bubbles and particles, and a sonar-sweep
+  HUD.
+- **Ember** — heat glow and shimmer, rising sparks and ash, and an angular
+  energy-frame HUD.
+- **Synthwave** — a striped neon sunset, scanlines, a perspective horizon grid,
+  and a retro neon HUD.
+
+Changing **Theme** selects only the visual system; it does not change the color
+setting. Color settings are independent controls:
+
+- **Follow Harness colors** — uses Harness theme colors so the effects adapt to
+  the current light or dark appearance.
+- **Base color** — chooses the effect accent. Editing it automatically turns
+  **Follow Harness colors** off.
 - **Show floating Vibe button** — hides or restores the quick-access button;
   this switch remains available in Plugin configuration.
-- **Reset** — returns to the default Adaptive preset.
+- **Reset** — restores the Aurora theme with **Follow Harness colors** enabled.
 
-Changes appear immediately and are saved through the Harness host. The effects
-continue to follow Harness light and dark mode, and continuous movement still
-stops when your operating system requests reduced motion.
+Changes appear immediately and are saved through the Harness host. Your theme,
+color choices, and quick-button preference are restored when you return.
+Continuous movement still stops when your operating system requests reduced
+motion.
 
 ## Development
 

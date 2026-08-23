@@ -1,7 +1,7 @@
 {
   "name": "dsh-vibe",
   "version": "1.1.0",
-  "description": "Ambient sci-fi vibe for the DeepSeek Harness web surface: an aurora + starfield background, plus a sci-fi HUD (corner brackets, scan beam, energy rings, synthwave grid) while the model is thinking.",
+  "description": "Ambient visual themes for DeepSeek Harness: Aurora, Ocean, Ember, and Synthwave backgrounds with matching animated thinking HUDs.",
   "type": "module",
   "scripts": {
     "test": "node --test",
@@ -33,6 +33,7 @@
     "plugin",
     "background",
     "effects",
+    "themes",
     "sci-fi"
   ],
   "author": "Unthropic",
