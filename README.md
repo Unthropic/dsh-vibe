@@ -8,8 +8,9 @@ dsh-vibe is a dual-face Cordis plugin that adds a configurable visual theme to
 the dsh web UI:
 
 1. **A permanent background** — each theme has its own animated atmosphere.
-2. **A thinking HUD** — each theme adds a matching overlay while the model is
-   thinking. The HUD unmounts when the response finishes or stops.
+2. **An optional thinking HUD** — enabled by default, each theme adds a matching
+   overlay while the model is thinking. The HUD unmounts when the response
+   finishes or stops.
 
 The visual effects use CSS animation and remain fully click-through. A Vibe
 button in the bottom-left sidebar footer gives you quick access to the plugin's
@@ -23,17 +24,18 @@ Idle Harness UI with the default Aurora theme:
 
 ### Thinking HUD
 
-The default Aurora HUD activated by a real running model response:
+The default Aurora HUD activated by a real running model response when
+**Show thinking effects** is enabled:
 
 ![dsh-vibe thinking HUD during a running Harness response](assets/thinking.gif)
 
 ## Features
 
-| Layer                        | What you get                                                                       |
-| ---------------------------- | ---------------------------------------------------------------------------------- |
-| Background (always)          | a distinct animated atmosphere for Aurora, Ocean, Ember, or Synthwave              |
-| Thinking HUD (while running) | a theme-specific motion and HUD system                                             |
-| Vibe settings                | theme dropdown · Harness color matching · custom base color · quick button · reset |
+| Layer                                    | What you get                                                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Background (always)                      | a distinct animated atmosphere for Aurora, Ocean, Ember, or Synthwave                                        |
+| Thinking HUD (while running, default on) | a theme-specific motion and HUD system                                                                       |
+| Vibe settings                            | theme dropdown · Harness color matching · custom base color · thinking-effects switch · quick button · reset |
 
 - **Zero interaction cost** — `pointer-events: none` on every layer, hardened
   against the shell's overlay CSS. It can never block a click.
@@ -44,7 +46,8 @@ The default Aurora HUD activated by a real running model response:
 - **Easy to configure** — open the Vibe button in the bottom-left sidebar
   footer to switch themes or adjust the color controls.
 - **Instant HUD** — the thinking effects follow the same `useSessions` running
-  flag used by the sidebar, with no polling.
+  flag used by the sidebar, with no polling. You can hide them without hiding
+  the ambient background.
 - **Saved automatically** — configuration is persisted by the Harness host and
   restored when you return.
 - **Reduced-motion aware** — continuous movement stops when the operating
@@ -130,15 +133,18 @@ setting. Color settings are independent controls:
   the current light or dark appearance.
 - **Base color** — chooses the effect accent. Editing it automatically turns
   **Follow Harness colors** off.
+- **Show thinking effects** — enabled by default; hides or restores the
+  theme-specific animated HUD during model work while keeping the ambient
+  background visible.
 - **Show floating Vibe button** — hides or restores the quick-access button;
   this switch remains available in Plugin configuration.
 - **Reset** — restores all defaults: Aurora, **Follow Harness colors**, and the
-  floating Vibe button.
+  thinking effects and floating Vibe button enabled.
 
 Changes appear immediately and are saved through the Harness host. Your theme,
-color choices, and quick-button preference are restored when you return.
-Continuous movement still stops when your operating system requests reduced
-motion.
+color choices, thinking-effects preference, and quick-button preference are
+restored when you return. Continuous movement still stops when your operating
+system requests reduced motion.
 
 ## Development
 

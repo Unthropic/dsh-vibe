@@ -34,13 +34,32 @@ function findNode(tree, predicate) {
   return visit(tree).find(predicate);
 }
 
+function checkboxByLabel(tree, label) {
+  const labelNode = findNode(
+    tree,
+    (node) => node.type === 'label' && nodeText(node).includes(label),
+  );
+  assert.ok(labelNode, `missing checkbox label: ${label}`);
+  const checkbox = findNode(
+    labelNode,
+    (node) => node.type === 'input' && node.props?.type === 'checkbox',
+  );
+  assert.ok(checkbox, `missing checkbox for label: ${label}`);
+  return checkbox;
+}
+
 function settleAsyncWrites() {
   return new Promise((resolve) => globalThis.setTimeout(resolve, 0));
 }
 
 function createReactMock() {
+  const states = [];
+  let stateCursor = 0;
   return {
     Fragment: Symbol('Fragment'),
+    beginRender() {
+      stateCursor = 0;
+    },
     createElement(type, props, ...children) {
       const mergedProps = { ...(props ?? {}), children };
       return typeof type === 'function' ? type(mergedProps) : { type, props: mergedProps };
@@ -52,11 +71,15 @@ function createReactMock() {
       return { current: value };
     },
     useState(initialValue) {
-      let value = typeof initialValue === 'function' ? initialValue() : initialValue;
+      const index = stateCursor;
+      stateCursor += 1;
+      if (!(index in states)) {
+        states[index] = typeof initialValue === 'function' ? initialValue() : initialValue;
+      }
       return [
-        value,
+        states[index],
         (next) => {
-          value = typeof next === 'function' ? next(value) : next;
+          states[index] = typeof next === 'function' ? next(states[index]) : next;
         },
       ];
     },
@@ -147,7 +170,7 @@ async function loadClientPlugin({ styleAlreadyPresent = false } = {}) {
       return react;
     };
     const plugin = definition.factory(require);
-    return { definition, plugin, styles };
+    return { definition, plugin, react, styles };
   } finally {
     if (previousWindow === undefined) delete globalThis.window;
     else globalThis.window = previousWindow;
@@ -209,6 +232,7 @@ test('host plugin registers true-theme defaults and accepts only the legacy pres
   const defaults = registration.schema({});
   assert.deepEqual(defaults, {
     showFloatingButton: true,
+    showThinkingEffects: true,
     theme: 'aurora',
     followHarnessColors: true,
     baseColor: '#4dc9ff',
@@ -217,12 +241,14 @@ test('host plugin registers true-theme defaults and accepts only the legacy pres
   assert.deepEqual(
     registration.schema({
       showFloatingButton: false,
+      showThinkingEffects: false,
       theme: 'synthwave',
       followHarnessColors: false,
       baseColor: '#A1b2C3',
     }),
     {
       showFloatingButton: false,
+      showThinkingEffects: false,
       theme: 'synthwave',
       followHarnessColors: false,
       baseColor: '#A1b2C3',
@@ -231,6 +257,7 @@ test('host plugin registers true-theme defaults and accepts only the legacy pres
   assert.equal(registration.schema({ preset: 'custom' }).preset, 'custom');
   assert.throws(() => registration.schema({ theme: 'adaptive' }));
   assert.throws(() => registration.schema({ preset: 'unknown' }));
+  assert.throws(() => registration.schema({ showThinkingEffects: 'false' }));
   assert.throws(() => registration.schema({ followHarnessColors: 'yes' }));
   assert.throws(() => registration.schema({ baseColor: 'blue' }));
   assert.throws(() => registration.schema({ baseColor: '#12345g' }));
@@ -268,8 +295,14 @@ test('default overlay remains unchanged and the HUD follows current-session runn
   const settings = createSettingsScope(undefined);
   const { registrations } = applyClientPlugin(plugin, settings.scope);
   const overlay = registrationFor(registrations, 'shell.overlay');
+  let sessionReads = 0;
   const renderWithState = (state) =>
-    overlay.component({ useSessions: (selector) => selector(state) });
+    overlay.component({
+      useSessions(selector) {
+        sessionReads += 1;
+        return selector(state);
+      },
+    });
 
   const idle = renderWithState({
     current: 'session-1',
@@ -286,6 +319,7 @@ test('default overlay remains unchanged and the HUD follows current-session runn
   assert.ok(collectClasses(running).includes('dsh-vibe-bg'));
   assert.ok(collectClasses(running).includes('dsh-vibe-hud'));
   assert.ok(!collectClasses(noSession).includes('dsh-vibe-hud'));
+  assert.equal(sessionReads, 3);
 
   const background = findNode(idle, (node) =>
     node.props?.className?.split(' ').includes('dsh-vibe-bg'),
@@ -295,6 +329,52 @@ test('default overlay remains unchanged and the HUD follows current-session runn
   assert.equal(background.props.style['--dsh-vibe-primary'], undefined);
   assert.equal(background.props.style['--dsh-vibe-secondary'], undefined);
   assert.equal(background.props.style['--dsh-vibe-tertiary'], undefined);
+});
+
+test('disabling thinking effects keeps the background and skips session reads', async () => {
+  const { plugin } = await loadClientPlugin();
+  const settings = createSettingsScope(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'ember',
+      followHarnessColors: false,
+      baseColor: '#ff6b35',
+    },
+    { user: { showThinkingEffects: true, theme: 'ember' } },
+  );
+  const { registrations } = applyClientPlugin(plugin, settings.scope);
+  const overlay = registrationFor(registrations, 'shell.overlay');
+  let sessionReads = 0;
+  const slots = {
+    useSessions(selector) {
+      sessionReads += 1;
+      return selector({ current: 'session-1', byId: { 'session-1': { running: true } } });
+    },
+  };
+  const enabledTree = overlay.component(slots);
+
+  assert.ok(collectClasses(enabledTree).includes('dsh-vibe-bg'));
+  assert.ok(collectClasses(enabledTree).includes('dsh-vibe-ember-heat'));
+  assert.ok(collectClasses(enabledTree).includes('dsh-vibe-hud'));
+  assert.equal(sessionReads, 1);
+
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: false,
+      theme: 'ember',
+      followHarnessColors: false,
+      baseColor: '#ff6b35',
+    },
+    { user: { showThinkingEffects: false, theme: 'ember' } },
+  );
+  const disabledTree = overlay.component(slots);
+
+  assert.ok(collectClasses(disabledTree).includes('dsh-vibe-bg'));
+  assert.ok(collectClasses(disabledTree).includes('dsh-vibe-ember-heat'));
+  assert.ok(!collectClasses(disabledTree).includes('dsh-vibe-hud'));
+  assert.equal(sessionReads, 1);
 });
 
 test('each theme renders its own background and running HUD structure', async () => {
@@ -311,6 +391,7 @@ test('each theme renders its own background and running HUD structure', async ()
     const settings = createSettingsScope(
       {
         showFloatingButton: true,
+        showThinkingEffects: true,
         theme,
         followHarnessColors: false,
         baseColor: '#123456',
@@ -341,12 +422,13 @@ test('each theme renders its own background and running HUD structure', async ()
 });
 
 test('launcher visibility and settings card controls follow the durable settings scope', async () => {
-  const { plugin } = await loadClientPlugin();
+  const { plugin, react } = await loadClientPlugin();
   const settings = createSettingsScope(undefined);
   const { registrations } = applyClientPlugin(plugin, settings.scope);
   const launcher = registrationFor(registrations, 'sidebar.footer.action');
   const card = registrationFor(registrations, 'settings.plugin.item');
 
+  react.beginRender();
   const launcherTree = launcher.component({});
   assert.ok(collectClasses(launcherTree).includes('dsh-vibe-quick'));
   const launcherButton = findNode(
@@ -355,6 +437,21 @@ test('launcher visibility and settings card controls follow the durable settings
   );
   assert.ok(launcherButton);
   assert.equal(launcherButton.props['aria-expanded'], false);
+
+  launcherButton.props.onClick();
+  react.beginRender();
+  const openLauncherTree = launcher.component({});
+  const quickPanel = findNode(
+    openLauncherTree,
+    (node) => node.props?.role === 'dialog' && node.props?.id === 'dsh-vibe-quick-panel',
+  );
+  assert.ok(quickPanel);
+  assert.equal(checkboxByLabel(quickPanel, 'Show thinking effects').props.checked, true);
+  assert.ok(
+    nodeText(quickPanel).includes(
+      'Keeps the background; hides the animated HUD while the model is working.',
+    ),
+  );
 
   const cardTree = card.component({});
   assert.equal(cardTree.type, 'li');
@@ -391,19 +488,22 @@ test('launcher visibility and settings card controls follow the durable settings
   const toggles = visit(cardTree).filter(
     (node) => node.type === 'input' && node.props?.type === 'checkbox',
   );
-  assert.equal(toggles.length, 2);
-  assert.equal(toggles[0].props.checked, true);
-  assert.equal(toggles[1].props.checked, true);
+  assert.equal(toggles.length, 3);
+  assert.equal(checkboxByLabel(cardTree, 'Follow Harness colors').props.checked, true);
+  assert.equal(checkboxByLabel(cardTree, 'Show thinking effects').props.checked, true);
+  assert.equal(checkboxByLabel(cardTree, 'Show floating Vibe button').props.checked, true);
 
   settings.update(
     {
       showFloatingButton: false,
+      showThinkingEffects: true,
       theme: 'aurora',
       followHarnessColors: true,
       baseColor: '#4dc9ff',
     },
     { user: { showFloatingButton: false } },
   );
+  react.beginRender();
   assert.equal(launcher.component({}), null);
 });
 
@@ -430,11 +530,15 @@ test('theme, color, Harness-follow, reset, and launcher controls use independent
   );
   colorPicker.props.onChange({ target: { value: '#ABCDEF' } });
 
-  const toggles = visit(cardTree).filter(
-    (node) => node.type === 'input' && node.props?.type === 'checkbox',
-  );
-  toggles[0].props.onChange({ target: { checked: true } });
-  toggles[1].props.onChange({ target: { checked: false } });
+  checkboxByLabel(cardTree, 'Follow Harness colors').props.onChange({
+    target: { checked: true },
+  });
+  checkboxByLabel(cardTree, 'Show thinking effects').props.onChange({
+    target: { checked: false },
+  });
+  checkboxByLabel(cardTree, 'Show floating Vibe button').props.onChange({
+    target: { checked: false },
+  });
 
   const reset = findNode(
     cardTree,
@@ -449,8 +553,10 @@ test('theme, color, Harness-follow, reset, and launcher controls use independent
     { method: 'set', field: 'baseColor', value: '#abcdef' },
     { method: 'set', field: 'followHarnessColors', value: false },
     { method: 'set', field: 'followHarnessColors', value: true },
+    { method: 'set', field: 'showThinkingEffects', value: false },
     { method: 'set', field: 'showFloatingButton', value: false },
     { method: 'unset', field: 'showFloatingButton' },
+    { method: 'unset', field: 'showThinkingEffects' },
     { method: 'unset', field: 'theme' },
     { method: 'unset', field: 'baseColor' },
     { method: 'unset', field: 'followHarnessColors' },
@@ -465,6 +571,7 @@ test('first theme change materializes legacy color choices before clearing the p
   const settings = createSettingsScope(
     {
       showFloatingButton: true,
+      showThinkingEffects: true,
       theme: 'aurora',
       followHarnessColors: true,
       baseColor: '#4dc9ff',
@@ -503,6 +610,7 @@ test('saved custom settings apply namespaced color variables to background and H
   const settings = createSettingsScope(
     {
       showFloatingButton: true,
+      showThinkingEffects: true,
       theme: 'aurora',
       followHarnessColors: false,
       baseColor: '#123456',
@@ -533,6 +641,7 @@ test('legacy preset migration follows the raw user layer, not schema-default the
   const { plugin } = await loadClientPlugin();
   const resolvedLegacyValue = {
     showFloatingButton: true,
+    showThinkingEffects: true,
     theme: 'aurora',
     followHarnessColors: true,
     baseColor: '#38bdf8',
@@ -553,11 +662,8 @@ test('legacy preset migration follows the raw user layer, not schema-default the
   assert.equal(legacyBackground.props['data-vibe-theme'], 'ocean');
   const legacyCard = card.component({});
   const legacySelect = findNode(legacyCard, (node) => node.props?.['aria-label'] === 'Vibe theme');
-  const legacyToggles = visit(legacyCard).filter(
-    (node) => node.type === 'input' && node.props?.type === 'checkbox',
-  );
   assert.equal(legacySelect.props.value, 'ocean');
-  assert.equal(legacyToggles[0].props.checked, false);
+  assert.equal(checkboxByLabel(legacyCard, 'Follow Harness colors').props.checked, false);
 
   settings.update(
     { ...resolvedLegacyValue, theme: 'synthwave', followHarnessColors: true },
