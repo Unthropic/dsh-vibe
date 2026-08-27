@@ -1,7 +1,7 @@
 {
   "name": "dsh-vibe",
-  "version": "1.2.0",
-  "description": "Ambient visual themes for DeepSeek Harness: Aurora, Ocean, Ember, and Synthwave backgrounds with matching animated thinking HUDs.",
+  "version": "1.3.0",
+  "description": "Five ambient visual themes for DeepSeek Harness: Aurora, Ocean, Ember, Synthwave, and Manbo backgrounds with matching animated thinking HUDs.",
   "type": "module",
   "scripts": {
     "test": "node --test",
@@ -34,6 +34,11 @@
     "background",
     "effects",
     "themes",
+    "aurora",
+    "ocean",
+    "ember",
+    "synthwave",
+    "manbo",
     "sci-fi"
   ],
   "author": "Unthropic",

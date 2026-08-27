@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { URL } from 'node:url';
 
 import hostPlugin from '../lib/index.js';
 
@@ -131,6 +134,7 @@ async function loadClientPlugin({ styleAlreadyPresent = false } = {}) {
     textContent: 'existing dsh-vibe styles',
   };
   const styles = styleAlreadyPresent ? [existingStyle] : [];
+  const audioInstances = [];
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
 
@@ -144,6 +148,28 @@ async function loadClientPlugin({ styleAlreadyPresent = false } = {}) {
     removeEventListener() {},
     innerHeight: 900,
     innerWidth: 1440,
+    Audio: class MockAudio {
+      constructor(src) {
+        this.src = src;
+        this.loop = false;
+        this.preload = '';
+        this.volume = 1;
+        this.currentTime = 0;
+        this.paused = true;
+        this.playCalls = 0;
+        this.pauseCalls = 0;
+        audioInstances.push(this);
+      }
+      play() {
+        this.playCalls += 1;
+        this.paused = false;
+        return Promise.resolve();
+      }
+      pause() {
+        this.pauseCalls += 1;
+        this.paused = true;
+      }
+    },
   };
   globalThis.document = {
     querySelector(selector) {
@@ -170,7 +196,14 @@ async function loadClientPlugin({ styleAlreadyPresent = false } = {}) {
       return react;
     };
     const plugin = definition.factory(require);
-    return { definition, plugin, react, styles };
+    return {
+      definition,
+      plugin,
+      react,
+      styles,
+      audioInstances,
+      audioController: globalThis.window.__dshVibeManbo,
+    };
   } finally {
     if (previousWindow === undefined) delete globalThis.window;
     else globalThis.window = previousWindow;
@@ -235,6 +268,8 @@ test('host plugin registers true-theme defaults and accepts only the legacy pres
     showThinkingEffects: true,
     theme: 'aurora',
     followHarnessColors: true,
+    playSound: true,
+    soundVolume: 0.25,
     baseColor: '#4dc9ff',
   });
   assert.equal(Object.hasOwn(defaults, 'preset'), false);
@@ -251,16 +286,45 @@ test('host plugin registers true-theme defaults and accepts only the legacy pres
       showThinkingEffects: false,
       theme: 'synthwave',
       followHarnessColors: false,
+      playSound: true,
+      soundVolume: 0.25,
       baseColor: '#A1b2C3',
     },
   );
   assert.equal(registration.schema({ preset: 'custom' }).preset, 'custom');
+  assert.equal(registration.schema({ theme: 'manbo' }).theme, 'manbo');
   assert.throws(() => registration.schema({ theme: 'adaptive' }));
   assert.throws(() => registration.schema({ preset: 'unknown' }));
   assert.throws(() => registration.schema({ showThinkingEffects: 'false' }));
   assert.throws(() => registration.schema({ followHarnessColors: 'yes' }));
   assert.throws(() => registration.schema({ baseColor: 'blue' }));
   assert.throws(() => registration.schema({ baseColor: '#12345g' }));
+  assert.throws(() => registration.schema({ playManboSound: 'yes' }));
+  assert.equal(registration.schema({ playManboSound: false }).playManboSound, false);
+  assert.throws(() => registration.schema({ playSound: 'yes' }));
+  assert.equal(registration.schema({ playSound: false }).playSound, false);
+  assert.equal(registration.schema({ soundVolume: 0.6 }).soundVolume, 0.6);
+});
+
+test('bundled manbo data URIs are byte-identical to their source assets', () => {
+  const clientSource = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
+  const payloads = [...clientSource.matchAll(/data:image\/webp;base64,([A-Za-z0-9+/=]+)/g)].map(
+    (match) => match[1],
+  );
+  const assetNames = ['brain-off.webp', 'joy.webp', 'loading.webp'];
+
+  assert.equal(payloads.length, assetNames.length);
+  for (const [index, assetName] of assetNames.entries()) {
+    const asset = readFileSync(new URL(`../assets/manbo/${assetName}`, import.meta.url));
+    assert.deepEqual(Buffer.from(payloads[index], 'base64'), asset, assetName);
+  }
+
+  const audioPayloads = [
+    ...clientSource.matchAll(/data:audio\/mpeg;base64,([A-Za-z0-9+/=]+)/g),
+  ].map((match) => match[1]);
+  const soundAsset = readFileSync(new URL('../assets/manbo/thinking-loop.mp3', import.meta.url));
+  assert.equal(audioPayloads.length, 1);
+  assert.deepEqual(Buffer.from(audioPayloads[0], 'base64'), soundAsset, 'thinking-loop.mp3');
 });
 
 test('client plugin avoids duplicate styles and registers all three native surfaces', async () => {
@@ -384,6 +448,7 @@ test('each theme renders its own background and running HUD structure', async ()
     ocean: { background: 'dsh-vibe-caustics', hud: 'dsh-vibe-sonar' },
     ember: { background: 'dsh-vibe-ember-heat', hud: 'dsh-vibe-energy-frame' },
     synthwave: { background: 'dsh-vibe-synth-sun', hud: 'dsh-vibe-retro-frame' },
+    manbo: { background: 'dsh-vibe-manbo-sky', hud: 'dsh-vibe-manbo-chant' },
   };
   const structures = new Set();
 
@@ -418,7 +483,7 @@ test('each theme renders its own background and running HUD structure', async ()
     structures.add(`${background.props.className}|${hud.props.className}|${expected.background}`);
   }
 
-  assert.equal(structures.size, 4);
+  assert.equal(structures.size, 5);
 });
 
 test('launcher visibility and settings card controls follow the durable settings scope', async () => {
@@ -448,9 +513,15 @@ test('launcher visibility and settings card controls follow the durable settings
   assert.ok(quickPanel);
   assert.equal(checkboxByLabel(quickPanel, 'Show thinking effects').props.checked, true);
   assert.ok(
-    nodeText(quickPanel).includes(
+    !nodeText(quickPanel).includes(
       'Keeps the background; hides the animated HUD while the model is working.',
     ),
+  );
+  assert.deepEqual(
+    visit(quickPanel)
+      .filter((node) => node.props?.className === 'dsh-vibe-helper')
+      .map(nodeText),
+    ['Editing Base color turns this off.'],
   );
 
   const cardTree = card.component({});
@@ -475,6 +546,7 @@ test('launcher visibility and settings card controls follow the durable settings
       { value: 'ocean', label: 'Ocean' },
       { value: 'ember', label: 'Ember' },
       { value: 'synthwave', label: 'Synthwave' },
+      { value: 'manbo', label: 'Manbo (曼波)' },
     ],
   );
   assert.ok(findNode(cardTree, (node) => node.type === 'input' && node.props?.type === 'color'));
@@ -492,6 +564,10 @@ test('launcher visibility and settings card controls follow the durable settings
   assert.equal(checkboxByLabel(cardTree, 'Follow Harness colors').props.checked, true);
   assert.equal(checkboxByLabel(cardTree, 'Show thinking effects').props.checked, true);
   assert.equal(checkboxByLabel(cardTree, 'Show floating Vibe button').props.checked, true);
+  assert.equal(
+    findNode(cardTree, (node) => node.type === 'label' && nodeText(node).includes('Play sound')),
+    undefined,
+  );
 
   settings.update(
     {
@@ -560,6 +636,9 @@ test('theme, color, Harness-follow, reset, and launcher controls use independent
     { method: 'unset', field: 'theme' },
     { method: 'unset', field: 'baseColor' },
     { method: 'unset', field: 'followHarnessColors' },
+    { method: 'unset', field: 'playSound' },
+    { method: 'unset', field: 'soundVolume' },
+    { method: 'unset', field: 'playManboSound' },
     { method: 'unset', field: 'preset' },
   ]);
 });
@@ -635,6 +714,397 @@ test('saved custom settings apply namespaced color variables to background and H
     '--dsh-vibe-accent': '#123456',
   });
   assert.deepEqual(hud.props.style, background.props.style);
+});
+
+test('manbo defaults to its rave palette without following Harness colors until the user owns those fields', async () => {
+  const { plugin } = await loadClientPlugin();
+  const settings = createSettingsScope(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: true,
+      baseColor: '#4dc9ff',
+    },
+    { user: { theme: 'manbo' } },
+  );
+  const { registrations } = applyClientPlugin(plugin, settings.scope);
+  const overlay = registrationFor(registrations, 'shell.overlay');
+  const render = () =>
+    overlay.component({
+      useSessions: (selector) =>
+        selector({ current: 'session-1', byId: { 'session-1': { running: true } } }),
+    });
+
+  const tree = render();
+  const background = findNode(tree, (node) =>
+    node.props?.className?.split(' ').includes('dsh-vibe-bg'),
+  );
+  assert.equal(background.props['data-vibe-theme'], 'manbo');
+  assert.deepEqual(background.props.style, {
+    '--dsh-vibe-primary': '#ff6ec7',
+    '--dsh-vibe-secondary': 'hsl(11 100% 68%)',
+    '--dsh-vibe-tertiary': 'hsl(275 100% 68%)',
+    '--dsh-vibe-accent': '#ff6ec7',
+  });
+  assert.ok(collectClasses(tree).includes('dsh-vibe-manbo-sky'));
+  assert.ok(collectClasses(tree).includes('dsh-vibe-manbo-meme'));
+  assert.ok(collectClasses(tree).includes('dsh-vibe-manbo-chant'));
+
+  const card = registrationFor(registrations, 'settings.plugin.item').component({});
+  assert.equal(checkboxByLabel(card, 'Follow Harness colors').props.checked, false);
+  const colorPicker = findNode(
+    card,
+    (node) => node.type === 'input' && node.props?.type === 'color',
+  );
+  assert.equal(colorPicker.props.value, '#ff6ec7');
+
+  // Once the user owns a color and the follow toggle, those values win.
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: false,
+      baseColor: '#abcdef',
+    },
+    { user: { theme: 'manbo', followHarnessColors: false, baseColor: '#abcdef' } },
+  );
+  const ownTree = render();
+  const ownBackground = findNode(ownTree, (node) =>
+    node.props?.className?.split(' ').includes('dsh-vibe-bg'),
+  );
+  assert.equal(ownBackground.props.style['--dsh-vibe-primary'], '#abcdef');
+  assert.equal(ownBackground.props.style['--dsh-vibe-secondary'], 'hsl(258 68% 68%)');
+  assert.equal(ownBackground.props.style['--dsh-vibe-tertiary'], 'hsl(162 68% 68%)');
+
+  // ...and an owned follow choice can deliberately re-follow Harness tokens.
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: true,
+      baseColor: '#abcdef',
+    },
+    { user: { theme: 'manbo', followHarnessColors: true, baseColor: '#abcdef' } },
+  );
+  const followTree = render();
+  const followBackground = findNode(followTree, (node) =>
+    node.props?.className?.split(' ').includes('dsh-vibe-bg'),
+  );
+  assert.equal(
+    followBackground.props.style['--dsh-vibe-primary'],
+    'var(--dsw-alias-brand-primary, #4dc9ff)',
+  );
+});
+
+test('switching themes never persists manbo defaults or disturbs other themes', async () => {
+  const { plugin } = await loadClientPlugin();
+  const settings = createSettingsScope(undefined);
+  const { registrations } = applyClientPlugin(plugin, settings.scope);
+  const cardTree = registrationFor(registrations, 'settings.plugin.item').component({});
+  const themeSelect = findNode(
+    cardTree,
+    (node) => node.type === 'select' && node.props?.['aria-label'] === 'Vibe theme',
+  );
+
+  themeSelect.props.onChange({ target: { value: 'manbo' } });
+  await settleAsyncWrites();
+  themeSelect.props.onChange({ target: { value: 'aurora' } });
+  await settleAsyncWrites();
+
+  assert.deepEqual(settings.calls, [
+    { method: 'set', field: 'theme', value: 'manbo' },
+    { method: 'unset', field: 'preset' },
+    { method: 'set', field: 'theme', value: 'aurora' },
+    { method: 'unset', field: 'preset' },
+  ]);
+});
+
+test('manbo settings show generic sound controls and migrate the legacy raw setting', async () => {
+  const { plugin } = await loadClientPlugin();
+  const settings = createSettingsScope(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: true,
+      baseColor: '#4dc9ff',
+    },
+    { user: { theme: 'manbo' } },
+  );
+  const { registrations } = applyClientPlugin(plugin, settings.scope);
+  const renderCard = () => registrationFor(registrations, 'settings.plugin.item').component({});
+
+  const defaultTree = renderCard();
+  assert.equal(checkboxByLabel(defaultTree, 'Play sound').props.checked, true);
+  const defaultVolume = findNode(
+    defaultTree,
+    (node) => node.type === 'input' && node.props?.['aria-label'] === 'Sound volume',
+  );
+  assert.ok(defaultVolume);
+  assert.equal(defaultVolume.props.type, 'range');
+  assert.equal(defaultVolume.props.value, 25);
+  assert.equal(defaultVolume.props.disabled, false);
+  assert.equal(defaultVolume.props['aria-valuetext'], '25%');
+  assert.ok(!nodeText(defaultTree).includes('Bouncy'));
+  assert.ok(!nodeText(defaultTree).includes('tiny Web Audio synth'));
+  assert.deepEqual(
+    visit(defaultTree)
+      .filter((node) => node.props?.className === 'dsh-vibe-helper')
+      .map(nodeText),
+    ['Editing Base color turns this off.'],
+  );
+  assert.equal(
+    findNode(defaultTree, (node) => node.type === 'textarea'),
+    undefined,
+  );
+  assert.equal(
+    visit(defaultTree).filter((node) => node.type === 'label' && nodeText(node).includes('Manbo'))
+      .length,
+    0,
+  );
+
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: true,
+      baseColor: '#4dc9ff',
+      playManboSound: false,
+    },
+    {
+      user: {
+        theme: 'manbo',
+        playManboSound: false,
+      },
+    },
+  );
+  const ownedTree = renderCard();
+  assert.equal(checkboxByLabel(ownedTree, 'Play sound').props.checked, false);
+  assert.equal(
+    findNode(
+      ownedTree,
+      (node) => node.type === 'input' && node.props?.['aria-label'] === 'Sound volume',
+    ).props.disabled,
+    true,
+  );
+});
+
+test('theme sound settings persist generically only while a sound theme is selected', async () => {
+  const { plugin } = await loadClientPlugin();
+  const settings = createSettingsScope(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: true,
+      baseColor: '#4dc9ff',
+      playSound: true,
+      soundVolume: 0.25,
+    },
+    { user: { theme: 'manbo' } },
+  );
+  const { registrations } = applyClientPlugin(plugin, settings.scope);
+  const renderCard = () => registrationFor(registrations, 'settings.plugin.item').component({});
+
+  const cardTree = renderCard();
+  const soundCheckbox = checkboxByLabel(cardTree, 'Play sound');
+  assert.ok(soundCheckbox);
+  assert.equal(
+    findNode(cardTree, (node) => node.type === 'textarea'),
+    undefined,
+  );
+
+  soundCheckbox.props.onChange({ target: { checked: false } });
+  await settleAsyncWrites();
+  const volume = findNode(
+    cardTree,
+    (node) => node.type === 'input' && node.props?.['aria-label'] === 'Sound volume',
+  );
+  volume.props.onChange({ target: { value: '67' } });
+  await settleAsyncWrites();
+  assert.deepEqual(settings.calls, [
+    { method: 'set', field: 'playSound', value: false },
+    { method: 'unset', field: 'playManboSound' },
+    { method: 'set', field: 'soundVolume', value: 0.67 },
+  ]);
+
+  // The extras disappear for other themes.
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'aurora',
+      followHarnessColors: true,
+      baseColor: '#4dc9ff',
+      playSound: true,
+      soundVolume: 0.25,
+    },
+    { user: { theme: 'aurora' } },
+  );
+  const auroraTree = renderCard();
+  assert.equal(
+    findNode(auroraTree, (node) => node.type === 'textarea'),
+    undefined,
+  );
+  assert.equal(
+    findNode(auroraTree, (node) => node.type === 'label' && nodeText(node).includes('Play sound')),
+    undefined,
+  );
+  assert.equal(
+    findNode(
+      auroraTree,
+      (node) => node.type === 'input' && node.props?.['aria-label'] === 'Sound volume',
+    ),
+    undefined,
+  );
+});
+
+test('bundled Manbo audio is lazy, loops while thinking, updates volume live, and resets on stop', async () => {
+  const { plugin, audioInstances, audioController } = await loadClientPlugin();
+  const settings = createSettingsScope(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'aurora',
+      followHarnessColors: true,
+      playSound: true,
+      soundVolume: 0.25,
+      baseColor: '#4dc9ff',
+    },
+    { user: { theme: 'aurora', playSound: true, soundVolume: 0.25 } },
+  );
+  const { registrations } = applyClientPlugin(plugin, settings.scope);
+  const overlay = registrationFor(registrations, 'shell.overlay');
+  const render = (running) =>
+    overlay.component({
+      useSessions: (selector) =>
+        selector({ current: 'session-1', byId: { 'session-1': { running } } }),
+    });
+
+  render(true);
+  assert.equal(audioInstances.length, 0, 'other themes must not create the player');
+
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: false,
+      playSound: true,
+      soundVolume: 0.25,
+      baseColor: '#ff6ec7',
+    },
+    { user: { theme: 'manbo', playSound: true, soundVolume: 0.25 } },
+  );
+  render(false);
+  assert.equal(audioInstances.length, 0, 'idle Manbo must keep the player lazy');
+
+  render(true);
+  assert.equal(audioInstances.length, 1);
+  const audio = audioInstances[0];
+  assert.match(audio.src, /^data:audio\/mpeg;base64,/);
+  assert.equal(audio.loop, true);
+  assert.equal(audio.preload, 'auto');
+  assert.equal(audio.volume, 0.25);
+  assert.equal(audio.playCalls, 1);
+  assert.equal(audio.paused, false);
+  assert.equal(audioController.playing(), true);
+
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: false,
+      playSound: true,
+      soundVolume: 0.62,
+      baseColor: '#ff6ec7',
+    },
+    { user: { theme: 'manbo', playSound: true, soundVolume: 0.62 } },
+  );
+  render(true);
+  assert.equal(audioInstances.length, 1);
+  assert.equal(audio.volume, 0.62);
+  assert.equal(audio.playCalls, 1, 'changing volume must not restart the clip');
+
+  audio.currentTime = 4;
+  settings.update(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: false,
+      playSound: false,
+      soundVolume: 0.62,
+      baseColor: '#ff6ec7',
+    },
+    { user: { theme: 'manbo', playSound: false, soundVolume: 0.62 } },
+  );
+  render(true);
+  assert.equal(audio.paused, true);
+  assert.equal(audio.currentTime, 0);
+  assert.equal(audioController.playing(), false);
+});
+
+test('idle and running manbo ignore legacy URLs and render only bundled WebP images', async () => {
+  const { plugin } = await loadClientPlugin();
+  const settings = createSettingsScope(
+    {
+      showFloatingButton: true,
+      showThinkingEffects: true,
+      theme: 'manbo',
+      followHarnessColors: false,
+      baseColor: '#ff6ec7',
+      playManboSound: true,
+      memeImages: ['https://legacy.example/private.png'],
+    },
+    {
+      user: {
+        theme: 'manbo',
+        followHarnessColors: false,
+        baseColor: '#ff6ec7',
+        memeImages: ['https://legacy.example/private.png'],
+      },
+    },
+  );
+  const { registrations } = applyClientPlugin(plugin, settings.scope);
+  const overlay = registrationFor(registrations, 'shell.overlay');
+  const render = (running) =>
+    overlay.component({
+      useSessions: (selector) =>
+        selector({ current: 'session-1', byId: { 'session-1': { running } } }),
+    });
+  const idle = render(false);
+  const running = render(true);
+  const idleImages = visit(idle).filter((node) => node.type === 'img');
+  const runningImages = visit(running).filter((node) => node.type === 'img');
+
+  assert.equal(idleImages.length, 3);
+  assert.ok(collectClasses(idle).includes('dsh-vibe-manbo-meme'));
+  assert.ok(!collectClasses(idle).includes('dsh-vibe-manbo-face-stage'));
+
+  const runningClasses = collectClasses(running);
+  for (const className of [
+    'dsh-vibe-manbo-meme',
+    'dsh-vibe-manbo-face-stage',
+    'dsh-vibe-manbo-face',
+    'dsh-vibe-manbo-react',
+    'dsh-vibe-manbo-burst',
+    'dsh-vibe-manbo-chant',
+  ]) {
+    assert.ok(runningClasses.includes(className), className);
+  }
+  assert.equal(runningImages.length, 8);
+
+  for (const image of [...idleImages, ...runningImages]) {
+    assert.match(image.props.src, /^data:image\/webp;base64,/);
+    assert.doesNotMatch(image.props.src, /^https?:/i);
+    assert.doesNotMatch(image.props.src, /legacy\.example/i);
+  }
 });
 
 test('legacy preset migration follows the raw user layer, not schema-default theme values', async () => {

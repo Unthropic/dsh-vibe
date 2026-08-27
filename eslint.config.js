@@ -2,7 +2,7 @@ import eslint from '@eslint/js';
 
 export default [
   {
-    ignores: ['assets/**', 'node_modules/**'],
+    ignores: ['assets/**', 'node_modules/**', '.demo-tmp/**'],
   },
   eslint.configs.recommended,
   {

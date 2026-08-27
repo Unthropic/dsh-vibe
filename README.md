@@ -31,16 +31,16 @@ The default Aurora HUD activated by a real running model response when
 
 ## Features
 
-| Layer                                    | What you get                                                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Background (always)                      | a distinct animated atmosphere for Aurora, Ocean, Ember, or Synthwave                                        |
-| Thinking HUD (while running, default on) | a theme-specific motion and HUD system                                                                       |
-| Vibe settings                            | theme dropdown · Harness color matching · custom base color · thinking-effects switch · quick button · reset |
+| Layer                                    | What you get                                                                                              |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Background (always)                      | a distinct animated atmosphere for Aurora, Ocean, Ember, Synthwave, or Manbo                              |
+| Thinking HUD (while running, default on) | a theme-specific motion and HUD system                                                                    |
+| Vibe settings                            | theme dropdown · color controls · thinking-effects switch · theme sound and volume · quick button · reset |
 
 - **Zero interaction cost** — `pointer-events: none` on every layer, hardened
   against the shell's overlay CSS. It can never block a click.
-- **Four real themes** — Aurora, Ocean, Ember, and Synthwave change the motion,
-  background, and thinking HUD—not only the color palette.
+- **Five real themes** — Aurora, Ocean, Ember, Synthwave, and Manbo change the
+  motion, background, and thinking HUD—not only the color palette.
 - **Independent color controls** — follow Harness colors or choose your own
   base color without changing the selected visual theme.
 - **Easy to configure** — open the Vibe button in the bottom-left sidebar
@@ -125,6 +125,11 @@ The **Theme** dropdown selects a complete visual system:
   energy-frame HUD.
 - **Synthwave** — a striped neon sunset, scanlines, a perspective horizon grid,
   and a retro neon HUD.
+- **Manbo** — a cheeky meme rave with floating 曼波 glyphs and three original
+  bundled chibi reaction faces. Its thinking HUD cycles the faces beneath a
+  scrolling chant and a quick **MANBO!!** burst, with an optional AI-generated
+  meme loop made for this project. The images and audio are bundled with the
+  plugin, so the theme works offline without external media requests.
 
 Changing **Theme** selects only the visual system; it does not change the color
 setting. Color settings are independent controls:
@@ -136,15 +141,21 @@ setting. Color settings are independent controls:
 - **Show thinking effects** — enabled by default; hides or restores the
   theme-specific animated HUD during model work while keeping the ambient
   background visible.
+- **Play sound** (available when a theme provides audio; currently Manbo) —
+  plays the bundled theme loop while the model works. Use the volume slider
+  below it to set the level. Browsers may require one page interaction before
+  allowing sound.
 - **Show floating Vibe button** — hides or restores the quick-access button;
   this switch remains available in Plugin configuration.
-- **Reset** — restores all defaults: Aurora, **Follow Harness colors**, and the
-  thinking effects and floating Vibe button enabled.
+- **Reset** — restores all defaults: Aurora, **Follow Harness colors**, 25%
+  sound volume, and the thinking effects, theme sound, and floating Vibe button
+  enabled.
 
 Changes appear immediately and are saved through the Harness host. Your theme,
-color choices, thinking-effects preference, and quick-button preference are
-restored when you return. Continuous movement still stops when your operating
-system requests reduced motion.
+color choices, thinking-effects preference, sound settings, and quick-button
+preference are restored when you return. Manbo's bundled frames adapt to
+smaller screens, and continuous movement—including frame cycling—stops when
+your operating system requests reduced motion.
 
 ## Development
 
