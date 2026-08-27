@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-> 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web 界面增添沉浸式科幻氛围。
+> 给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 加点动态主题：可以是安静的极光，也可以是毫无道理的曼波。
 
 dsh-vibe 是一个同时包含 Host（主机端）和 Client（浏览器端）的 Cordis 插件，为 dsh Web 界面增加可配置的视觉主题：
 
@@ -11,17 +11,39 @@ dsh-vibe 是一个同时包含 Host（主机端）和 Client（浏览器端）�
 
 视觉效果使用 CSS 动画，并且完全不会拦截点击。侧边栏左下角的 Vibe 按钮可用于快速打开插件的外观设置。
 
-### 环境背景
+## 主题
 
-使用默认 Aurora 主题的空闲 Harness 界面：
+每套主题都有自己的动态背景和思考 HUD。
 
-![空闲 Harness 会话中的 dsh-vibe 环境背景](assets/background.gif)
+### Manbo（曼波）· 新主题
 
-### 思考中 HUD
+傻乎乎、吵闹、没什么道理。打开 **Play sound** 才是完整体验。
 
-启用 **Show thinking effects** 时，由真实模型响应触发的默认 Aurora HUD：
+![Manbo 主题](assets/themes/manbo.gif)
 
-![真实模型响应运行时的 dsh-vibe 思考中 HUD](assets/thinking.gif)
+### Aurora
+
+安静、柔和，像一层会呼吸的极光。
+
+![Aurora 主题](assets/themes/aurora.gif)
+
+### Ocean
+
+深海、气泡，还有一圈慢慢扫过的声呐。
+
+![Ocean 主题](assets/themes/ocean.gif)
+
+### Ember
+
+热浪和火星，感觉屏幕下一秒就要烧起来。
+
+![Ember 主题](assets/themes/ember.gif)
+
+### Synthwave
+
+霓虹落日和复古网格，像掉进一台 80 年代街机。
+
+![Synthwave 主题](assets/themes/synthwave.gif)
 
 ## 功能
 
@@ -116,7 +138,7 @@ npm install
 npm run check
 ```
 
-运行 `npm run demos:render`，可以从真实运行、且已启用此插件的 DeepSeek Harness 界面录制 README 动画演示。默认地址为 `http://127.0.0.1:3081/`；可通过 `DSH_DEMO_URL` 指定其他地址。渲染器会打开隔离浏览器，确认 Harness 和插件均已加载，录制空闲背景，提交一条真实模型提示，仅在 Harness 报告该响应正在运行时录制 HUD，并在接受生成的 GIF 前完整解码所有帧。因此，所选模型提供商必须有足够额度完成一次响应。可通过 `DSH_DEMO_PROMPT` 替换默认录制提示。
+运行 `npm run demos:render`，可以从真实运行的 DeepSeek Harness 界面录制全部五套主题。默认地址为 `http://127.0.0.1:3081/`；可通过 `DSH_DEMO_URL` 指定其他地址。所选模型提供商需要有足够额度完成一次真实响应。可通过 `DSH_DEMO_PROMPT` 替换录制提示。
 
 ## 卸载
 

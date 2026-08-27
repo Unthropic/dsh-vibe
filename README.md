@@ -2,7 +2,7 @@
 
 English | [简体中文](README.zh-CN.md)
 
-> Ambient sci-fi vibes for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web surface.
+> Animated themes for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — from quiet auroras to pure Manbo chaos.
 
 dsh-vibe is a dual-face Cordis plugin that adds a configurable visual theme to
 the dsh web UI:
@@ -16,18 +16,39 @@ The visual effects use CSS animation and remain fully click-through. A Vibe
 button in the bottom-left sidebar footer gives you quick access to the plugin's
 appearance settings.
 
-### Ambient background
+## Themes
 
-Idle Harness UI with the default Aurora theme:
+Each theme has its own animated background and thinking HUD.
 
-![dsh-vibe ambient background in an idle Harness session](assets/background.gif)
+### Manbo (曼波) · New
 
-### Thinking HUD
+Silly, loud, and proudly chaotic. Turn on **Play sound** for the full effect.
 
-The default Aurora HUD activated by a real running model response when
-**Show thinking effects** is enabled:
+![Manbo theme](assets/themes/manbo.gif)
 
-![dsh-vibe thinking HUD during a running Harness response](assets/thinking.gif)
+### Aurora
+
+Calm northern lights with a clean sci-fi HUD.
+
+![Aurora theme](assets/themes/aurora.gif)
+
+### Ocean
+
+Deep water, drifting bubbles, and a slow sonar sweep.
+
+![Ocean theme](assets/themes/ocean.gif)
+
+### Ember
+
+Heat, sparks, and the feeling that the screen might catch fire.
+
+![Ember theme](assets/themes/ember.gif)
+
+### Synthwave
+
+A neon sunset and retro grid, straight out of an '80s arcade.
+
+![Synthwave theme](assets/themes/synthwave.gif)
 
 ## Features
 
@@ -164,15 +185,10 @@ npm install
 npm run check
 ```
 
-Run `npm run demos:render` to capture the animated README demos from a real,
-running DeepSeek Harness UI with this plugin enabled. It uses
-`http://127.0.0.1:3081/` by default; set `DSH_DEMO_URL` to use another address.
-The renderer opens an isolated browser, verifies both Harness and the plugin,
-captures the idle background, submits one real model prompt, captures the HUD
-only while Harness reports that response as running, and fully decodes the
-generated GIFs before accepting them. The selected model provider therefore
-needs enough quota for one response. Set `DSH_DEMO_PROMPT` to replace the
-default capture prompt.
+Run `npm run demos:render` to capture all five theme GIFs from a real, running
+DeepSeek Harness UI. It uses `http://127.0.0.1:3081/` by default; set
+`DSH_DEMO_URL` to use another address. The selected model provider needs enough
+quota for a real response. Set `DSH_DEMO_PROMPT` to replace the capture prompt.
 
 ## Uninstall
 

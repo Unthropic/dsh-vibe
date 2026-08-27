@@ -6,15 +6,18 @@ import test from 'node:test';
 import sharp from 'sharp';
 
 const assets = [
-  { name: 'background.gif', pages: 24 },
-  { name: 'thinking.gif', pages: 20 },
+  { name: 'manbo.gif', pages: 20 },
+  { name: 'aurora.gif', pages: 20 },
+  { name: 'ocean.gif', pages: 20 },
+  { name: 'ember.gif', pages: 20 },
+  { name: 'synthwave.gif', pages: 20 },
 ];
 
 const manboAssets = ['brain-off.webp', 'joy.webp', 'loading.webp'];
 
 for (const asset of assets) {
   test(`${asset.name} is a valid, compact animated GIF`, async () => {
-    const path = join(import.meta.dirname, '..', 'assets', asset.name);
+    const path = join(import.meta.dirname, '..', 'assets', 'themes', asset.name);
     const metadata = await sharp(path, { animated: true }).metadata();
     const info = await stat(path);
 
