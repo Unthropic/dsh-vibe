@@ -81,7 +81,7 @@ Harness 仍在快速演进。如果新版本更改了客户端协议，请提交
 ## 安装
 
 ```sh
-dsh plugin --profile web add dsh-vibe
+dsh plugin --profile web add dsh-vibe@latest --config.minimum-release-age-exclude=dsh-vibe
 ```
 
 该命令会从 npm 将 `dsh-vibe` 下载到 Web 配置方案（profile），并自动启用其插件包（bundle）。重启 `dsh web`，然后强制刷新页面（Ctrl+F5）。无需手动编辑 YAML。

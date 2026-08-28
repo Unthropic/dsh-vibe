@@ -98,7 +98,7 @@ please open an issue with the Harness version and browser console output.
 ## Install
 
 ```sh
-dsh plugin --profile web add dsh-vibe
+dsh plugin --profile web add dsh-vibe@latest --config.minimum-release-age-exclude=dsh-vibe
 ```
 
 This downloads `dsh-vibe` from npm into the Web profile and activates its
