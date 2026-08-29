@@ -24,31 +24,31 @@ Each theme has its own animated background and thinking HUD.
 
 Silly, loud, and proudly chaotic. Turn on **Play sound** for the full effect.
 
-![Manbo theme](assets/themes/manbo.gif)
+![Manbo theme](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/manbo.gif)
 
 ### Aurora
 
 Calm northern lights with a clean sci-fi HUD.
 
-![Aurora theme](assets/themes/aurora.gif)
+![Aurora theme](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/aurora.gif)
 
 ### Ocean
 
 Deep water, drifting bubbles, and a slow sonar sweep.
 
-![Ocean theme](assets/themes/ocean.gif)
+![Ocean theme](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/ocean.gif)
 
 ### Ember
 
 Heat, sparks, and the feeling that the screen might catch fire.
 
-![Ember theme](assets/themes/ember.gif)
+![Ember theme](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/ember.gif)
 
 ### Synthwave
 
 A neon sunset and retro grid, straight out of an '80s arcade.
 
-![Synthwave theme](assets/themes/synthwave.gif)
+![Synthwave theme](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/synthwave.gif)
 
 ## Features
 

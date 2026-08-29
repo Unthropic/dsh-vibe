@@ -19,31 +19,31 @@ dsh-vibe 是一个同时包含 Host（主机端）和 Client（浏览器端）�
 
 傻乎乎、吵闹、没什么道理。打开 **Play sound** 才是完整体验。
 
-![Manbo 主题](assets/themes/manbo.gif)
+![Manbo 主题](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/manbo.gif)
 
 ### Aurora
 
 安静、柔和，像一层会呼吸的极光。
 
-![Aurora 主题](assets/themes/aurora.gif)
+![Aurora 主题](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/aurora.gif)
 
 ### Ocean
 
 深海、气泡，还有一圈慢慢扫过的声呐。
 
-![Ocean 主题](assets/themes/ocean.gif)
+![Ocean 主题](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/ocean.gif)
 
 ### Ember
 
 热浪和火星，感觉屏幕下一秒就要烧起来。
 
-![Ember 主题](assets/themes/ember.gif)
+![Ember 主题](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/ember.gif)
 
 ### Synthwave
 
 霓虹落日和复古网格，像掉进一台 80 年代街机。
 
-![Synthwave 主题](assets/themes/synthwave.gif)
+![Synthwave 主题](https://raw.githubusercontent.com/unthropic/dsh-vibe/main/assets/themes/synthwave.gif)
 
 ## 功能
 
