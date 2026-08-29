@@ -48,10 +48,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unthropic/dsh-vibe.git"
+    "url": "git+https://github.com/Unthropic/dsh-vibe.git"
   },
   "bugs": {
-    "url": "https://github.com/unthropic/dsh-vibe/issues"
+    "url": "https://github.com/Unthropic/dsh-vibe/issues"
   },
   "dsh": {
     "bundle": {
